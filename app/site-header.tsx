@@ -1,6 +1,6 @@
 "use client";
 
-import { site } from "./site";
+import type { Settings } from "./sanity/content";
 
 function syncHeaderHeight(header: HTMLElement | null) {
   if (!header) return;
@@ -16,32 +16,52 @@ function syncHeaderHeight(header: HTMLElement | null) {
   };
 }
 
-export function SiteHeader() {
+function ContactLine({ settings }: { settings: Settings }) {
+  const parts = [
+    settings.studioAddress &&
+      (settings.studioAddressUrl ? (
+        <a key="address" href={settings.studioAddressUrl} target="_blank" rel="noreferrer">
+          {settings.studioAddress}
+        </a>
+      ) : (
+        <span key="address">{settings.studioAddress}</span>
+      )),
+    settings.email && (
+      <a key="email" href={`mailto:${settings.email}`}>
+        {settings.emailLabel || settings.email}
+      </a>
+    ),
+    settings.instagram && (
+      <a key="instagram" href={settings.instagram} target="_blank" rel="noreferrer me">
+        Instagram
+      </a>
+    ),
+  ].filter(Boolean);
+
+  if (!parts.length) return null;
+
+  return (
+    <p>
+      {parts.flatMap((part, index) => (index === 0 ? [part] : [" — ", part]))}
+    </p>
+  );
+}
+
+export function SiteHeader({ settings }: { settings: Settings }) {
+  const [firstName, ...rest] = settings.name.split(" ");
+
   return (
     <header className="site-header" ref={syncHeaderHeight}>
       <p className="wordmark">
-        <a href="#top">
-          <span>emma</span>
-          <span>galwas</span>
+        <a href="#top" aria-label={settings.name}>
+          <span>{firstName.toLowerCase()}</span>
+          {rest.length > 0 && <span>{rest.join(" ").toLowerCase()}</span>}
         </a>
       </p>
       <div className="studio-info">
-        <p>{site.tagline}</p>
-        <p>Clients {site.clients.join(", ")}.</p>
-        <p>
-          Studio Address —{" "}
-          <a href={`mailto:${site.email}`}>
-            OFFICE@emmagalwasSTUDIO.com
-          </a>{" "}
-          —{" "}
-          <a
-            href={site.instagram}
-            target="_blank"
-            rel="noreferrer me"
-          >
-            Instagram
-          </a>
-        </p>
+        <p>{settings.tagline}</p>
+        {settings.clients.length > 0 && <p>Clients {settings.clients.join(", ")}.</p>}
+        <ContactLine settings={settings} />
       </div>
     </header>
   );

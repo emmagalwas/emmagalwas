@@ -1,0 +1,105 @@
+import { defineArrayMember, defineField, defineType } from "sanity";
+import { CogIcon } from "@sanity/icons/Cog";
+
+export const siteSettings = defineType({
+  name: "siteSettings",
+  title: "Site settings",
+  type: "document",
+  icon: CogIcon,
+  groups: [
+    { name: "header", title: "Header", default: true },
+    { name: "seo", title: "SEO" },
+  ],
+  fields: [
+    defineField({
+      name: "name",
+      title: "Name",
+      type: "string",
+      group: "header",
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: "tagline",
+      title: "Tagline",
+      type: "string",
+      group: "header",
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: "clients",
+      title: "Clients",
+      type: "array",
+      group: "header",
+      description: "Drag to reorder.",
+      of: [defineArrayMember({ type: "string" })],
+    }),
+    defineField({
+      name: "studioAddress",
+      title: "Studio address",
+      type: "string",
+      group: "header",
+      description: "Text shown before the email, e.g. “Studio Address”.",
+    }),
+    defineField({
+      name: "studioAddressUrl",
+      title: "Studio address link",
+      type: "url",
+      group: "header",
+      description: "Optional map link for the studio address.",
+    }),
+    defineField({
+      name: "email",
+      title: "Email",
+      type: "string",
+      group: "header",
+      validation: (rule) => rule.required().email(),
+    }),
+    defineField({
+      name: "emailLabel",
+      title: "Email as shown",
+      type: "string",
+      group: "header",
+      description: "How the email is written on the site, e.g. “OFFICE@emmagalwasSTUDIO.com”.",
+    }),
+    defineField({
+      name: "instagram",
+      title: "Instagram URL",
+      type: "url",
+      group: "header",
+    }),
+    defineField({
+      name: "seoTitle",
+      title: "Page title",
+      type: "string",
+      group: "seo",
+      description: "Shown in browser tabs and search results. Aim for under 60 characters.",
+      validation: (rule) => rule.required().max(70),
+    }),
+    defineField({
+      name: "seoDescription",
+      title: "Description",
+      type: "text",
+      rows: 3,
+      group: "seo",
+      description: "Shown under the title in search results. Aim for 150–160 characters.",
+      validation: (rule) => rule.required().max(200),
+    }),
+    defineField({
+      name: "studioName",
+      title: "Studio name",
+      type: "string",
+      group: "seo",
+      description: "Used in structured data, e.g. “Emma Galwas Studio”.",
+    }),
+    defineField({
+      name: "jobTitle",
+      title: "Job title",
+      type: "string",
+      group: "seo",
+      description: "Used in structured data, e.g. “Art Director”.",
+    }),
+  ],
+  preview: {
+    prepare: () => ({ title: "Site settings" }),
+  },
+});

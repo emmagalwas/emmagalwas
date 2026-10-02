@@ -152,7 +152,7 @@ a:focus-visible,
   );
   --row-height: min(
     var(--fit-height),
-    calc((var(--row-width) - var(--gaps) * var(--gap)) / var(--ratio-sum))
+    calc((var(--row-width) - var(--gaps-desktop) * var(--gap)) / var(--ratio-desktop))
   );
   display: flex;
   justify-content: center;
@@ -172,6 +172,8 @@ a:focus-visible,
   height: var(--row-height);
   width: auto;
   max-width: none;
+  object-fit: cover;
+  background: #f2f2f2;
   user-select: none;
   -webkit-user-select: none;
 }
@@ -186,39 +188,49 @@ a:focus-visible,
   text-wrap: balance;
 }
 
+@utility media-scroller {
+  align-self: stretch;
+  justify-content: flex-start;
+  max-width: none;
+  margin-inline: calc(-1 * var(--gutter-left)) calc(-1 * var(--gutter-right));
+  padding-inline: var(--gutter-left) var(--gutter-right);
+  scroll-padding-inline: var(--gutter-left) var(--gutter-right);
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  & > .project-image {
+    scroll-snap-align: start;
+  }
+
+  & > .project-image:first-child {
+    margin-inline-start: auto;
+  }
+
+  & > .project-image:last-child {
+    margin-inline-end: auto;
+  }
+}
+
+@media (min-width: 1024px) {
+  .project-row[data-scroll] {
+    @apply media-scroller;
+  }
+}
+
 @media (max-width: 1023px) {
   .project-row {
     --row-height: min(
       var(--fit-height),
       calc((var(--row-width) - var(--gaps-tablet) * var(--gap)) / var(--ratio-tablet))
     );
-    align-self: stretch;
-    justify-content: flex-start;
-    max-width: none;
-    margin-inline: calc(-1 * var(--gutter-left)) calc(-1 * var(--gutter-right));
-    padding-inline: var(--gutter-left) var(--gutter-right);
-    scroll-padding-inline: var(--gutter-left) var(--gutter-right);
-    overflow-x: auto;
-    overflow-y: hidden;
-    overscroll-behavior-x: contain;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
-  }
-
-  .project-row::-webkit-scrollbar {
-    display: none;
-  }
-
-  .project-image:first-child {
-    margin-inline-start: auto;
-  }
-
-  .project-image:last-child {
-    margin-inline-end: auto;
-  }
-
-  .project-image {
-    scroll-snap-align: start;
+    @apply media-scroller;
   }
 }
 

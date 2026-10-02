@@ -12,7 +12,8 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   images: {
-    formats: ["image/avif", "image/webp"],
+    loader: "custom",
+    loaderFile: "./app/sanity/image-loader.ts",
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
-import { site } from "./site";
+import { getContent } from "./sanity/content";
+import { siteUrl } from "./site";
 import "./globals.css";
 
 const garamond = localFont({
@@ -19,40 +20,44 @@ const garamond = localFont({
   variable: "--font-garamond",
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(site.url),
-  title: site.title,
-  description: site.description,
-  applicationName: site.name,
-  authors: [{ name: site.name, url: site.url }],
-  creator: site.name,
-  publisher: site.studioName,
-  alternates: { canonical: "/" },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+export async function generateMetadata(): Promise<Metadata> {
+  const { settings } = await getContent();
+
+  return {
+    metadataBase: new URL(siteUrl),
+    title: settings.seoTitle,
+    description: settings.seoDescription,
+    applicationName: settings.name,
+    authors: [{ name: settings.name, url: siteUrl }],
+    creator: settings.name,
+    publisher: settings.studioName ?? settings.name,
+    alternates: { canonical: "/" },
+    robots: {
       index: true,
       follow: true,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-      "max-video-preview": -1,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+        "max-video-preview": -1,
+      },
     },
-  },
-  openGraph: {
-    type: "website",
-    url: "/",
-    siteName: site.name,
-    title: site.title,
-    description: site.description,
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: site.title,
-    description: site.description,
-  },
-  formatDetection: { telephone: false, address: false, email: false },
-};
+    openGraph: {
+      type: "website",
+      url: "/",
+      siteName: settings.name,
+      title: settings.seoTitle,
+      description: settings.seoDescription,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: settings.seoTitle,
+      description: settings.seoDescription,
+    },
+    formatDetection: { telephone: false, address: false, email: false },
+  };
+}
 
 export const viewport: Viewport = {
   width: "device-width",
