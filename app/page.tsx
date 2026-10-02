@@ -2,6 +2,7 @@ import Image from "next/image";
 import type { CSSProperties } from "react";
 import { projects, type Project, type ProjectImage } from "./projects";
 import { SiteHeader } from "./site-header";
+import { site } from "./site";
 
 const tabletPeek = 1.12;
 const mobilePeek = 1.18;
@@ -70,19 +71,91 @@ function ProjectSlide({ project, index }: { project: Project; index: number }) {
           />
         ))}
       </div>
-      <p className="caption">
+      <h2 className="caption">
         {project.title} — {project.role}
-      </p>
+      </h2>
     </section>
   );
+}
+
+function structuredData() {
+  const personId = `${site.url}/#person`;
+  const studioId = `${site.url}/#studio`;
+  const websiteId = `${site.url}/#website`;
+
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Person",
+        "@id": personId,
+        name: site.name,
+        url: `${site.url}/`,
+        jobTitle: "Art Director",
+        email: `mailto:${site.email}`,
+        worksFor: { "@id": studioId },
+        sameAs: [site.instagram],
+      },
+      {
+        "@type": "ProfessionalService",
+        "@id": studioId,
+        name: site.studioName,
+        url: `${site.url}/`,
+        description: site.tagline,
+        email: site.email,
+        image: `${site.url}/opengraph-image.png`,
+        founder: { "@id": personId },
+        areaServed: "Worldwide",
+        knowsAbout: ["Art direction", "Digital projects", "Still life", "Campaigns"],
+        sameAs: [site.instagram],
+      },
+      {
+        "@type": "WebSite",
+        "@id": websiteId,
+        name: site.name,
+        url: `${site.url}/`,
+        description: site.description,
+        publisher: { "@id": studioId },
+        inLanguage: "en",
+      },
+      {
+        "@type": "CollectionPage",
+        "@id": `${site.url}/#work`,
+        url: `${site.url}/`,
+        name: site.title,
+        isPartOf: { "@id": websiteId },
+        about: { "@id": personId },
+        hasPart: projects.map((project) => ({
+          "@type": "CreativeWork",
+          "@id": `${site.url}/#${project.slug}`,
+          name: project.title,
+          description: `${project.title} — ${project.role}`,
+          creator: { "@id": personId },
+          image: project.images.map((image) => ({
+            "@type": "ImageObject",
+            contentUrl: `${site.url}${image.src}`,
+            width: image.width,
+            height: image.height,
+            caption: image.alt,
+          })),
+        })),
+      },
+    ],
+  };
 }
 
 export default function Home() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(structuredData()).replace(/</g, "\\u003c"),
+        }}
+      />
       <SiteHeader />
       <main id="top">
-        <h1 className="visually-hidden">Emma Galwas — Art Direction</h1>
+        <h1 className="visually-hidden">{site.title}</h1>
         {projects.map((project, index) => (
           <ProjectSlide key={project.slug} project={project} index={index} />
         ))}

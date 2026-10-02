@@ -1,17 +1,6 @@
 "use client";
 
-const clients = [
-  "Aēsop",
-  "Chanel",
-  "Chloé",
-  "Georg Jensen",
-  "Loewe",
-  "Louis Vuitton",
-  "Prada",
-  "Nanushka",
-  "One&Only Hotels",
-  "Tekla",
-];
+import { site } from "./site";
 
 function syncHeaderHeight(header: HTMLElement | null) {
   if (!header) return;
@@ -37,21 +26,18 @@ export function SiteHeader() {
         </a>
       </p>
       <div className="studio-info">
-        <p>
-          A creative practice working globally across art direction and
-          digital projects.
-        </p>
-        <p>Clients {clients.join(", ")}.</p>
+        <p>{site.tagline}</p>
+        <p>Clients {site.clients.join(", ")}.</p>
         <p>
           Studio Address —{" "}
-          <a href="mailto:office@emmagalwasstudio.com">
+          <a href={`mailto:${site.email}`}>
             OFFICE@emmagalwasSTUDIO.com
           </a>{" "}
           —{" "}
           <a
-            href="https://www.instagram.com/emmagalwas"
+            href={site.instagram}
             target="_blank"
-            rel="noreferrer"
+            rel="noreferrer me"
           >
             Instagram
           </a>
