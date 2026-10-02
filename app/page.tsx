@@ -1,69 +1,92 @@
 import Image from "next/image";
+import type { CSSProperties } from "react";
+import { projects, type Project, type ProjectImage } from "./projects";
+import { SiteHeader } from "./site-header";
+
+const tabletPeek = 1.12;
+const mobilePeek = 1.18;
+
+function rowLayout(project: Project) {
+  const ratios = project.images.map((image) => image.width / image.height);
+  const ratioSum = ratios.reduce((sum, ratio) => sum + ratio, 0);
+  const widestRatio = Math.max(...ratios);
+  const imageCount = project.images.length;
+  const tabletColumns = Math.min(imageCount, 2);
+  const tabletDivisor =
+    widestRatio * tabletColumns * (imageCount > tabletColumns ? tabletPeek : 1);
+  const mobileDivisor = widestRatio * (imageCount > 1 ? mobilePeek : 1);
+
+  return { ratioSum, tabletColumns, tabletDivisor, mobileDivisor };
+}
+
+function rowVariables(project: Project): CSSProperties {
+  const layout = rowLayout(project);
+  return {
+    "--ratio-sum": layout.ratioSum,
+    "--gaps": project.images.length - 1,
+    "--ratio-tablet": layout.tabletDivisor,
+    "--gaps-tablet": layout.tabletColumns - 1,
+    "--ratio-mobile": layout.mobileDivisor,
+  } as CSSProperties;
+}
+
+function imageSizes(project: Project, image: ProjectImage) {
+  const layout = rowLayout(project);
+  const ratio = image.width / image.height;
+  const share = (divisor: number, viewportShare: number) =>
+    `${Math.ceil((ratio / divisor) * viewportShare)}vw`;
+
+  return [
+    `(min-width: 1024px) ${share(layout.ratioSum, 83)}`,
+    `(min-width: 640px) ${share(layout.tabletDivisor, 83)}`,
+    share(layout.mobileDivisor, 95),
+  ].join(", ");
+}
+
+function ProjectSlide({ project, index }: { project: Project; index: number }) {
+  const isFirst = index === 0;
+
+  return (
+    <section id={project.slug} className="project" aria-label={project.title}>
+      <div
+        className="project-row"
+        style={rowVariables(project)}
+        role="region"
+        aria-label={`${project.title} images`}
+        tabIndex={project.images.length > 1 ? 0 : undefined}
+      >
+        {project.images.map((image) => (
+          <Image
+            key={image.src}
+            className="project-image"
+            src={image.src}
+            alt={image.alt}
+            width={image.width}
+            height={image.height}
+            sizes={imageSizes(project, image)}
+            loading={isFirst ? "eager" : "lazy"}
+            fetchPriority={isFirst ? "high" : "auto"}
+            draggable={false}
+          />
+        ))}
+      </div>
+      <p className="caption">
+        {project.title} — {project.role}
+      </p>
+    </section>
+  );
+}
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+    <>
+      <SiteHeader />
+      <main id="top">
+        <h1 className="visually-hidden">Emma Galwas — Art Direction</h1>
+        {projects.map((project, index) => (
+          <ProjectSlide key={project.slug} project={project} index={index} />
+        ))}
       </main>
-    </div>
+    </>
   );
 }
