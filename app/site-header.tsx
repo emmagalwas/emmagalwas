@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { Settings } from "./sanity/content";
 
 function syncHeaderHeight(header: HTMLElement | null) {
@@ -48,14 +49,19 @@ function ContactLine({ settings }: { settings: Settings }) {
 }
 
 export function SiteHeader({ settings }: { settings: Settings }) {
-  const [firstName, ...rest] = settings.name.split(" ");
-
   return (
     <header className="site-header" ref={syncHeaderHeight}>
       <p className="wordmark">
-        <a href="#top" aria-label={settings.name}>
-          <span>{firstName.toLowerCase()}</span>
-          {rest.length > 0 && <span>{rest.join(" ").toLowerCase()}</span>}
+        <a href="#top">
+          <Image
+            src="/logo.svg"
+            alt={settings.name}
+            width={1189}
+            height={208}
+            unoptimized
+            loading="eager"
+            fetchPriority="high"
+          />
         </a>
       </p>
       <div className="studio-info">

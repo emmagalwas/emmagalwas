@@ -109,8 +109,13 @@ a:focus-visible,
 }
 
 .wordmark a {
-  display: flex;
-  gap: 0.7em;
+  display: block;
+}
+
+.wordmark img {
+  display: block;
+  width: 5.35em;
+  height: auto;
 }
 
 .studio-info {
