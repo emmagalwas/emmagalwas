@@ -30,7 +30,7 @@ export const project = defineType({
       title: "Images & videos",
       type: "array",
       description:
-        "Drag to reorder. Use “Upload multiple images or videos” to add several at once. Up to three items show side by side on desktop; more scroll sideways.",
+        "Drag to reorder. Use “Upload multiple images or videos” to add several at once. Items show three at a time; more continue on the next page.",
       options: { layout: "grid" },
       components: { input: BatchMediaUploadInput },
       of: [

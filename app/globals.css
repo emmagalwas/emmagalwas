@@ -28,29 +28,13 @@
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
-}
-
-@media (pointer: fine) and (min-height: 600px) {
-  html {
-    scroll-snap-type: y mandatory;
-  }
-}
-
-@media (pointer: coarse) {
-  html {
-    scroll-snap-type: y proximity;
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  html {
-    scroll-behavior: smooth;
-  }
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 body {
   margin: 0;
-  overflow-x: clip;
+  overflow: hidden;
   background: var(--background);
   color: var(--ink);
   font-family: var(--font-garamond), "EB Garamond", Garamond, "Times New Roman", serif;
@@ -131,16 +115,79 @@ a:focus-visible,
   margin: 0;
 }
 
+.slideshow {
+  position: relative;
+  height: var(--viewport-height);
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+
+.slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.slide[data-active] {
+  opacity: 1;
+  visibility: visible;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .slide {
+    transition:
+      opacity 0.35s ease,
+      visibility 0s linear 0.35s;
+  }
+
+  .slide[data-active] {
+    transition: opacity 0.35s ease;
+  }
+}
+
+.slideshow-button {
+  position: absolute;
+  bottom: var(--section-pad-bottom);
+  z-index: 5;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--ink);
+  background: var(--background);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--caption-size);
+}
+
+.slideshow-button[data-direction="previous"] {
+  left: var(--gutter-left);
+}
+
+.slideshow-button[data-direction="next"] {
+  right: var(--gutter-right);
+}
+
+.visually-hidden-focusable:not(:focus-visible) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 .project {
   container-type: inline-size;
   box-sizing: border-box;
-  min-height: var(--viewport-height);
+  height: 100%;
   padding: calc(var(--header-height) + var(--section-pad-top)) var(--gutter-right)
     var(--section-pad-bottom) var(--gutter-left);
   display: flex;
   flex-direction: column;
   align-items: center;
-  scroll-snap-align: start;
 }
 
 .project-row {
@@ -157,7 +204,7 @@ a:focus-visible,
   );
   --row-height: min(
     var(--fit-height),
-    calc((var(--row-width) - var(--gaps-desktop) * var(--gap)) / var(--ratio-desktop))
+    calc((var(--row-width) - var(--gaps) * var(--gap)) / var(--ratio))
   );
   display: flex;
   justify-content: center;
@@ -193,70 +240,17 @@ a:focus-visible,
   text-wrap: balance;
 }
 
-@utility media-scroller {
-  align-self: stretch;
-  justify-content: flex-start;
-  max-width: none;
-  margin-inline: calc(-1 * var(--gutter-left)) calc(-1 * var(--gutter-right));
-  padding-inline: var(--gutter-left) var(--gutter-right);
-  scroll-padding-inline: var(--gutter-left) var(--gutter-right);
-  overflow-x: auto;
-  overflow-y: hidden;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-
-  & > .project-image {
-    scroll-snap-align: start;
-  }
-
-  & > .project-image:first-child {
-    margin-inline-start: auto;
-  }
-
-  & > .project-image:last-child {
-    margin-inline-end: auto;
-  }
-}
-
-@media (min-width: 1024px) {
-  .project-row[data-scroll] {
-    @apply media-scroller;
-  }
-}
-
-@media (max-width: 1023px) {
-  .project-row {
-    --row-height: min(
-      var(--fit-height),
-      calc((var(--row-width) - var(--gaps-tablet) * var(--gap)) / var(--ratio-tablet))
-    );
-    @apply media-scroller;
-  }
-}
-
 @media (max-width: 639px) {
   :root {
     --gutter-base: 1rem;
-    --header-height: 0px;
     --header-pad-top: max(1.25rem, env(safe-area-inset-top));
-  }
-
-  html {
-    scroll-snap-type: none;
-  }
-
-  .project {
-    min-height: 0;
-    padding-bottom: clamp(2rem, 6vh, 3.5rem);
+    --header-height: var(
+      --header-measured,
+      calc(var(--header-pad-top) + 2.25rem + var(--info-size) * 6)
+    );
   }
 
   .site-header {
-    position: static;
     flex-direction: column;
     gap: 0.75rem;
   }
@@ -267,10 +261,7 @@ a:focus-visible,
     line-height: 1.2;
   }
 
-  .project-row {
-    --row-height: min(
-      var(--fit-height),
-      calc(var(--row-width) / var(--ratio-mobile))
-    );
+  .project {
+    justify-content: center;
   }
 }

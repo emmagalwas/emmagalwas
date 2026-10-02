@@ -7,59 +7,50 @@ import {
   type ProjectVideo,
   type Settings,
 } from "./sanity/content";
-import { MediaRow } from "./media-row";
+import { ProjectSlideshow } from "./project-slideshow";
 import { SiteHeader } from "./site-header";
 import { siteUrl } from "./site";
 
-const desktopColumns = 3;
-const tabletPeek = 1.12;
-const mobilePeek = 1.18;
+const itemsPerPage = 3;
 
-function rowLayout(project: Project) {
-  const ratios = project.media.map((item) => item.width / item.height);
-  const widestRatio = Math.max(...ratios);
-  const itemCount = project.media.length;
-  const visibleOnDesktop = Math.min(itemCount, desktopColumns);
-  const desktopDivisor = ratios
-    .slice(0, visibleOnDesktop)
-    .reduce((sum, ratio) => sum + ratio, 0);
-  const tabletColumns = Math.min(itemCount, 2);
-  const tabletDivisor =
-    widestRatio * tabletColumns * (itemCount > tabletColumns ? tabletPeek : 1);
-  const mobileDivisor = widestRatio * (itemCount > 1 ? mobilePeek : 1);
+type ProjectPage = {
+  slug: string;
+  label: string;
+  items: ProjectMedia[];
+  style: CSSProperties;
+  divisor: number;
+};
 
-  return {
-    desktopDivisor,
-    desktopGaps: visibleOnDesktop - 1,
-    scrollsOnDesktop: itemCount > desktopColumns,
-    tabletColumns,
-    tabletDivisor,
-    mobileDivisor,
-  };
+function ratioOf(item: ProjectMedia) {
+  return item.width / item.height;
 }
 
-function rowVariables(project: Project): CSSProperties {
-  const layout = rowLayout(project);
-  return {
-    "--ratio-desktop": layout.desktopDivisor,
-    "--gaps-desktop": layout.desktopGaps,
-    "--ratio-tablet": layout.tabletDivisor,
-    "--gaps-tablet": layout.tabletColumns - 1,
-    "--ratio-mobile": layout.mobileDivisor,
-  } as CSSProperties;
+function chunk<T>(items: T[], size: number) {
+  return Array.from({ length: Math.ceil(items.length / size) }, (_, index) =>
+    items.slice(index * size, index * size + size),
+  );
 }
 
-function mediaSizes(project: Project, item: ProjectMedia) {
-  const layout = rowLayout(project);
-  const ratio = item.width / item.height;
-  const share = (divisor: number, viewportShare: number) =>
-    `${Math.ceil((ratio / divisor) * viewportShare)}vw`;
+function projectPages(project: Project): ProjectPage[] {
+  const groups = chunk(project.media, itemsPerPage);
+  const widest = groups
+    .map((items) => ({
+      divisor: items.reduce((sum, item) => sum + ratioOf(item), 0),
+      gaps: items.length - 1,
+    }))
+    .reduce((best, group) => (group.divisor > best.divisor ? group : best));
 
-  return [
-    `(min-width: 1024px) ${share(layout.desktopDivisor, 83)}`,
-    `(min-width: 640px) ${share(layout.tabletDivisor, 83)}`,
-    share(layout.mobileDivisor, 95),
-  ].join(", ");
+  return groups.map((items, index) => ({
+    slug: index === 0 ? project.slug : `${project.slug}/${index + 1}`,
+    label: groups.length > 1 ? `${project.title}, ${index + 1} of ${groups.length}` : project.title,
+    items,
+    divisor: widest.divisor,
+    style: { "--ratio": widest.divisor, "--gaps": widest.gaps } as CSSProperties,
+  }));
+}
+
+function mediaSizes(page: ProjectPage, item: ProjectMedia) {
+  return `${Math.ceil((ratioOf(item) / page.divisor) * 92)}vw`;
 }
 
 function ProjectVideoItem({ video, isFirst }: { video: ProjectVideo; isFirst: boolean }) {
@@ -83,18 +74,19 @@ function ProjectVideoItem({ video, isFirst }: { video: ProjectVideo; isFirst: bo
   );
 }
 
-function ProjectSlide({ project, index }: { project: Project; index: number }) {
-  const isFirst = index === 0;
-
+function ProjectSlide({
+  project,
+  page,
+  isFirst,
+}: {
+  project: Project;
+  page: ProjectPage;
+  isFirst: boolean;
+}) {
   return (
-    <section id={project.slug} className="project" aria-label={project.title}>
-      <MediaRow
-        style={rowVariables(project)}
-        scrollsOnDesktop={rowLayout(project).scrollsOnDesktop}
-        label={`${project.title} media`}
-        focusable={project.media.length > 1}
-      >
-        {project.media.map((item) =>
+    <section className="project">
+      <div className="project-row" style={page.style}>
+        {page.items.map((item) =>
           item.kind === "video" ? (
             <ProjectVideoItem key={item.key} video={item} isFirst={isFirst} />
           ) : (
@@ -105,7 +97,7 @@ function ProjectSlide({ project, index }: { project: Project; index: number }) {
               alt={item.alt}
               width={item.width}
               height={item.height}
-              sizes={mediaSizes(project, item)}
+              sizes={mediaSizes(page, item)}
               placeholder={item.blurDataURL ? "blur" : "empty"}
               blurDataURL={item.blurDataURL}
               loading={isFirst ? "eager" : "lazy"}
@@ -114,7 +106,7 @@ function ProjectSlide({ project, index }: { project: Project; index: number }) {
             />
           ),
         )}
-      </MediaRow>
+      </div>
       <h2 className="caption">
         {project.title} — {project.role}
       </h2>
@@ -225,9 +217,21 @@ export default async function Home() {
       <SiteHeader settings={settings} />
       <main id="top">
         <h1 className="visually-hidden">{settings.seoTitle}</h1>
-        {projects.map((project, index) => (
-          <ProjectSlide key={project.id} project={project} index={index} />
-        ))}
+        <ProjectSlideshow
+          slides={projects.flatMap((project, projectIndex) =>
+            projectPages(project).map((page, pageIndex) => ({
+              slug: page.slug,
+              title: page.label,
+              content: (
+                <ProjectSlide
+                  project={project}
+                  page={page}
+                  isFirst={projectIndex === 0 && pageIndex === 0}
+                />
+              ),
+            })),
+          )}
+        />
       </main>
     </>
   );
